@@ -158,3 +158,6 @@ validation_videos/*
 
 *.ckpt
 *.pt
+
+converted_datasets/
+rollouts/

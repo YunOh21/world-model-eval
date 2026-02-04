@@ -17,6 +17,9 @@ import functools
 import torch
 from torchvision.io import write_video
 
+import cv2
+import json
+
 BRIDGE_V2_PATH = "rail.eecs.berkeley.edu/datasets/bridge_release/data/tfds/bridge_dataset/1.0.0/"
 
 def map_observation(
@@ -24,13 +27,16 @@ def map_observation(
     from_step: Dict[str, Any],
     from_image_feature_names: Tuple[str, ...] = ("image",),
     to_image_feature_names: Tuple[str, ...] = ("image",),
+    from_instruction_feature: str = "natural_language_instruction",
+    to_instruction_feature: str = "instruction"
 ) -> None:
-    for from_feature_name, to_feature_name in zip(
-        from_image_feature_names, to_image_feature_names
-    ):
-        to_step["observation"][to_feature_name] = from_step["observation"][
-            from_feature_name
-        ]
+    for from_img, to_img in zip(from_image_feature_names, to_image_feature_names):
+        to_step["observation"][to_img] = from_step["observation"][from_img]
+
+    if from_instruction_feature in from_step["observation"]:
+        raw_val = from_step["observation"][from_instruction_feature]
+        instr_str = raw_val.decode('utf-8') if hasattr(raw_val, 'decode') else str(raw_val)
+        to_step["observation"][to_instruction_feature] = instr_str
 
 
 def terminate_bool_to_act(terminate_episode: np.ndarray) -> np.ndarray:
@@ -333,11 +339,13 @@ def episode_map_fn(
 ) -> Dict[str, Any]:
     steps = list(map(map_step, episode["steps"]))
     frames = np.stack([s["observation"]["image"] for s in steps], axis=0)
-    episode = {
+    instruction = steps[0]["observation"]["instruction"]
+
+    return {
         "video": frames,
         "action": np.stack([s["action"] for s in steps]),
+        "instruction": instruction
     }
-    return episode
 
 
 def step_map_fn(
@@ -553,14 +561,21 @@ def convert_dataset(
                     episode, map_step=dataset_config["step_map_fn"]
                 )
 
-                # Extract video and actions
+                # Extract video and actions + instruction
                 video = torch.from_numpy(episode["video"])
                 action = episode["action"]
+                instruction = episode["instruction"]
 
                 # Save files
                 base_path = split_output_dir / f"{i:09d}"
                 write_video(str(base_path) + ".mp4", video, fps=fps)
                 np.savez(str(base_path) + ".npz", action)
+                
+                # Make png/json for evaluation
+                cv2.imwrite(str(base_path) + ".png", cv2.cvtColor(episode["video"][0], cv2.COLOR_RGB2BGR))
+                with open(str(base_path) + ".json", "w") as f:
+                    json.dump({"instruction": episode["instruction"]}, f)
+                
 
             except Exception as e:
                 print(f"Failed to process episode {i} in {dataset_name}-{split}: {e}")
