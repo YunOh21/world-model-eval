@@ -20,7 +20,7 @@ from torchvision.io import write_video
 import cv2
 import json
 
-BRIDGE_V2_PATH = "rail.eecs.berkeley.edu/datasets/bridge_release/data/tfds/bridge_dataset/1.0.0/"
+BRIDGE_V2_PATH = "./bridge_v2_tfds"
 
 def map_observation(
     to_step: Dict[str, Any],
@@ -339,7 +339,14 @@ def episode_map_fn(
 ) -> Dict[str, Any]:
     steps = list(map(map_step, episode["steps"]))
     frames = np.stack([s["observation"]["image"] for s in steps], axis=0)
-    instruction = steps[0]["observation"]["instruction"]
+    
+    has_language = episode["episode_metadata"]["has_language"]
+    if has_language:
+        instruction = steps[0]["language_instruction"]
+        if isinstance(instruction, bytes):
+            instruction = instruction.decode("utf-8")
+    else:
+        instruction = ""
 
     return {
         "video": frames,
@@ -379,6 +386,7 @@ def step_map_fn(
         axis=0,
     )
     transformed_step["action"] = action
+    transformed_step["language_instruction"] = step.get("language_instruction", b"")
 
     return transformed_step
 
