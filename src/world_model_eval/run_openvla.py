@@ -115,7 +115,8 @@ def run(
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
         trust_remote_code=True,
-    ).cuda().eval()
+        device_map="auto",
+    ).eval()
 
     if root_dir is None:
         raise ValueError("root_dir must be provided; pass --root-dir to point at the evaluation dataset.")

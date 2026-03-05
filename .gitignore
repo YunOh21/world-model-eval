@@ -161,3 +161,4 @@ validation_videos/*
 
 converted_datasets/
 rollouts/
+bridge*/

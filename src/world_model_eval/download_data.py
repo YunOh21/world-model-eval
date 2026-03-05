@@ -548,7 +548,7 @@ def convert_dataset(
     print("Dataset built successfully.")
 
     # Process each split
-    for split in ["train", "test"]:
+    for split in ["val"]:
         split_output_dir = dataset_output_dir / split
         split_output_dir.mkdir(exist_ok=True)
 
