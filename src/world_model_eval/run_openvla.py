@@ -16,6 +16,7 @@ import mediapy as media
 from tqdm import tqdm
 import torch
 from pathlib import Path
+import json
 
 
 def evaluate_openvla(wm, vla, processor, trials, retries=1, rollout_length=40,
@@ -73,10 +74,15 @@ def evaluate_openvla(wm, vla, processor, trials, retries=1, rollout_length=40,
                     media.write_video(str(target_dir / out_name), rollout_video, fps=20)
                 score = predict(rollout_video, trial)
                 results.append({
-                    "task_key": trial["task_key"],
-                    "task_display": trial["task_display"],
+                    "task_key": vid_name,
+                    "task_display": trial["instruction"],
                     "score": float(score),
                 })
+                
+                print(f"  [task_key] {vid_name} [Task] {trial['instruction']} | Score: {score}")
+                
+                with open("results.jsonl", "a") as f:
+                    f.write(json.dumps(results[-1]) + "\n")
     return results
 
 CHECKPOINTS_TO_KWARGS = {
