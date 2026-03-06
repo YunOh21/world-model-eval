@@ -122,7 +122,6 @@ def run(
     vla = AutoModelForVision2Seq.from_pretrained(
         f"openvla/{model_name}",
         torch_dtype=torch.bfloat16,
-        low_cpu_mem_usage=True,
         trust_remote_code=True,
     ).eval()
     
