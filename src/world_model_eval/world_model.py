@@ -8,8 +8,8 @@ from .diffusion import Diffusion
 
 
 class WorldModel:
-    def __init__(self, checkpoint_path: str, use_pixel_rope: bool = False, default_cfg: float = 1.0):
-        self.device = "cuda:0"
+    def __init__(self, checkpoint_path: str, use_pixel_rope: bool = False, default_cfg: float = 1.0, device):
+        self.device = device
         self.model = (
             DiT(
                 in_channels=16,
