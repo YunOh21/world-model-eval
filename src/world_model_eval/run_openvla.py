@@ -37,18 +37,18 @@ def evaluate_openvla(wm, vla, processor, trials, retries=1, rollout_length=40,
         for trial in tqdm(trials, desc="Openvla trials"):
             start_frame = np.array(Image.open(trial["trial_png"]).resize((256, 256)))
             for r in range(retries):
-                wm.reset(torch.from_numpy(start_frame).cuda().float() / 255.0)
+                wm.reset(torch.from_numpy(start_frame).to(device).float() / 255.0)
                 frames = [start_frame]
                 for step in range(rollout_length):
                     curr_frame = Image.fromarray(frames[-1])
                     prompt = f"In: What action should the robot take to {trial['instruction']}?\nOut:"
                     inputs = processor(prompt, curr_frame).to(
-                        device="cuda", dtype=torch.bfloat16
+                        device=device, dtype=torch.bfloat16
                     )
                     actions = vla.predict_action(
                         **inputs, unnorm_key="bridge_orig", do_sample=False
                     )
-                    a = torch.tensor(actions).cuda()
+                    a = torch.tensor(actions).to(device)
                     # NOTE: OpenVLA outputs 7-dim actions, while the world model was trained with up to 10-dim actions.
                     a = torch.cat([a, a.new_zeros(3)], dim=-1)  # pad with zeros
                     a = rescale_bridge_action(a)
@@ -107,6 +107,8 @@ def run(
     video_out_dir: str | None = None,
 ) -> dict[str, dict[str, float]]:
     """Run the OpenVLA evaluation loop."""
+    accelerator = Accelerator()  # 추가
+    device = accelerator.device  # "cuda" 대신 사용할 디바이스
 
     ckpt_path = Path(checkpoint_path)
     if not ckpt_path.exists():
@@ -121,8 +123,9 @@ def run(
         torch_dtype=torch.bfloat16,
         low_cpu_mem_usage=True,
         trust_remote_code=True,
-        device_map="auto",
     ).eval()
+    
+    vla = accelerator.prepare(vla)
 
     if root_dir is None:
         raise ValueError("root_dir must be provided; pass --root-dir to point at the evaluation dataset.")
