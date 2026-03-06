@@ -8,7 +8,7 @@ from .diffusion import Diffusion
 
 
 class WorldModel:
-    def __init__(self, checkpoint_path: str, use_pixel_rope: bool = False, default_cfg: float = 1.0, device):
+    def __init__(self, checkpoint_path: str, use_pixel_rope: bool = False, default_cfg: float = 1.0, device = None):
         self.device = device
         self.model = (
             DiT(
