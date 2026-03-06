@@ -20,7 +20,7 @@ import json
 from accelerate import Accelerator
 
 
-def evaluate_openvla(wm, vla, processor, trials, retries=1, rollout_length=40,
+def evaluate_openvla(wm, vla, processor, trials, device, retries=1, rollout_length=40,
                      save_video=False, video_out_dir=None, root_dir=None):
     """
     Rollout an OpenVLA model on a list of tasks, and return the score on each task.
@@ -116,7 +116,7 @@ def run(
         raise FileNotFoundError(f"Checkpoint not found at {ckpt_path}; download it manually and retry.")
     ckpt_key = ckpt_path.name
     ckpt_kwargs = CHECKPOINTS_TO_KWARGS.get(ckpt_key, {})
-    wm = WorldModel(ckpt_path, **ckpt_kwargs)
+    wm = WorldModel(ckpt_path, **ckpt_kwargs).to(device).eval()
 
     processor = AutoProcessor.from_pretrained(f"openvla/{model_name}", trust_remote_code=True)
     vla = AutoModelForVision2Seq.from_pretrained(
@@ -138,6 +138,7 @@ def run(
         vla,
         processor,
         trials,
+        device,
         rollout_length=rollout_length,
         retries=retries,
         save_video=save_video,
