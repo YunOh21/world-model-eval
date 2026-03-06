@@ -119,13 +119,12 @@ def run(
     wm = WorldModel(ckpt_path, device=device, **ckpt_kwargs)
 
     processor = AutoProcessor.from_pretrained(f"openvla/{model_name}", trust_remote_code=True)
-    with accelerator.init_zero3_context():
-        vla = AutoModelForVision2Seq.from_pretrained(
-            f"openvla/{model_name}",
-            torch_dtype=torch.bfloat16,
-            low_cpu_mem_usage=True,
-            trust_remote_code=True,
-        ).eval()
+    vla = AutoModelForVision2Seq.from_pretrained(
+        f"openvla/{model_name}",
+        torch_dtype=torch.bfloat16,
+        low_cpu_mem_usage=True,
+        trust_remote_code=True,
+    ).eval()
     
     vla = accelerator.prepare(vla)
 
