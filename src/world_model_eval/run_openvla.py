@@ -123,6 +123,7 @@ def run(
         f"openvla/{model_name}",
         torch_dtype=torch.bfloat16,
         trust_remote_code=True,
+        ignore_mismatched_sizes=True,
     ).eval()
     
     vla = accelerator.prepare(vla)
