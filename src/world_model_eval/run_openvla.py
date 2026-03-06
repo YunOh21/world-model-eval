@@ -116,7 +116,7 @@ def run(
         raise FileNotFoundError(f"Checkpoint not found at {ckpt_path}; download it manually and retry.")
     ckpt_key = ckpt_path.name
     ckpt_kwargs = CHECKPOINTS_TO_KWARGS.get(ckpt_key, {})
-    wm = WorldModel(ckpt_path, device=device, **ckpt_kwargs).eval()
+    wm = WorldModel(ckpt_path, device=device, **ckpt_kwargs)
 
     processor = AutoProcessor.from_pretrained(f"openvla/{model_name}", trust_remote_code=True)
     with accelerator.zero_3_init_context():
