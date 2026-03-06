@@ -27,7 +27,7 @@ class WorldModel:
             .to(self.device)
             .eval()
         )
-        state_dict = torch.load(checkpoint_path, weights_only=True)
+        state_dict = torch.load(checkpoint_path, map_location='cpu', weights_only=True)
         if "ema" in state_dict:
             state_dict = state_dict["ema"]
         self.model.load_state_dict(state_dict, strict=True)
