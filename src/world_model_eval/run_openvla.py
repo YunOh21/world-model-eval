@@ -17,6 +17,7 @@ from tqdm import tqdm
 import torch
 from pathlib import Path
 import json
+from accelerate import Accelerator
 
 
 def evaluate_openvla(wm, vla, processor, trials, retries=1, rollout_length=40,
